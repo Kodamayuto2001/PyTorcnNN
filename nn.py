@@ -111,7 +111,7 @@ class MyDataLoader:
     r"""
     trainRootDir = "path/to/train/"
     testRootDir = "path/to/test/"
-    imgSize = 64
+    imgSize = 128
     batchSize = 128
     numWorkers = 3
         --numWorkers = the number of tagNames
@@ -129,9 +129,11 @@ class MyDataLoader:
 
     def __dataSet(self, trainRootDir, testRootDir, imgSize):
         self.trainData = torchvision.datasets.ImageFolder(root=trainRootDir,
-                                                          transform=transforms.Compose([transforms.Grayscale(),transforms.Resize((imgSize,imgSize)),transforms.ToTensor(),]))
+                                                          transform=transforms.Compose([transforms.Grayscale(),transforms.Resize((imgSize,imgSize)),transforms.ToTensor(),#transforms.Normalize((0.5,),(0.5,)),
+                                                          ]))
         self.testData = torchvision.datasets.ImageFolder(root=testRootDir,
-                                                         transform=transforms.Compose([transforms.Grayscale(),transforms.Resize((imgSize,imgSize)),transforms.ToTensor(),]))
+                                                         transform=transforms.Compose([transforms.Grayscale(),transforms.Resize((imgSize,imgSize)),transforms.ToTensor(),#transforms.Normalize((0.5,),(0.5,)),
+                                                         ]))
         pass
 
     def __dataLoader(self, batchSize,num_workers):
@@ -167,11 +169,11 @@ class MyDataLoader:
 class Net(nn.Module):
     def __init__(self,num):
         super(Net, self).__init__()
-        self.fc1 = torch.nn.Linear(64*64, 100)
-        self.fc2 = torch.nn.Linear(100, num)
+        self.fc1 = torch.nn.Linear(128*128, 120)
+        self.fc2 = torch.nn.Linear(120, num)
  
     def forward(self, x):
-        x = x.view(-1,64*64)
+        x = x.view(-1,128*128)
         x = self.fc1(x)
         x = torch.relu(x)
         x = self.fc2(x)
@@ -185,7 +187,7 @@ if __name__ == "__main__":
 
     #学習回数
 
-    epoch = 10
+    epoch = 20
 
     #学習結果保存用
     history = {
@@ -217,7 +219,7 @@ if __name__ == "__main__":
     #num_workers = os.cpu_count()
     num_workers = 0
     #print(num_workers)
-    mDataLoader = MyDataLoader(trainRootDir="Resources/train/",testRootDir="Resources/test/",imgSize=64,batchSize=1,num_workers=num_workers)
+    mDataLoader = MyDataLoader(trainRootDir="Resources/train/",testRootDir="Resources/test/",imgSize=128,batchSize=1,num_workers=num_workers)
     #mDataLoader.imshow()
     #print(mDataLoader.trainData)
 
@@ -225,22 +227,22 @@ if __name__ == "__main__":
     #print(loaders)
     #print(loaders["train"])
     #print(loaders["train"].shape())
-    optimizer = torch.optim.Adam(params=net.parameters(),lr=0.00006)
+    optimizer = torch.optim.Adam(params=net.parameters(),lr=0.00002)
 
     for e in range(epoch):
         for i,data in enumerate(loaders["train"],0):
             inputs,label = data 
             #print(type(inputs))
-            print(inputs.dtype)
-            print(inputs)
+            #print(inputs.dtype)
+            #print(inputs)
             #print(i)
             #print(inputs[0][0][0][0])
             #print(len(inputs[0][0][0]))
             #print(len(inputs[0][0]))
             #print(inputs.size())
-            #torch.Size([1, 1, 64, 64])
+            #torch.Size([1, 1, 128, 128])
             #print(label)
-            #inputs = inputs.view(-1,64*64)
+            #inputs = inputs.view(-1,128*128)
             #print(inputs.size())
             optimizer.zero_grad()
             output = net(inputs)
@@ -267,7 +269,7 @@ if __name__ == "__main__":
                 inputs,label = data
                 #print(inputs)
                 #print(label)
-                #inputs = inputs.view(-1,64*64)
+                #inputs = inputs.view(-1,128*128)
                 output = net(inputs)
                 #testLoss += F.nll_loss(output,label,reduction="sum").item()
                 #pred = output.argmax(dim=1,keepdim=True)
@@ -283,7 +285,7 @@ if __name__ == "__main__":
 
         history['testLoss'].append(testLoss)
         history['testAcc'].append(100*correct/total)
-    
+    """
      # テスト
     andou = cv2.imread("Resources/train/kataoka/1.jpg")
 
@@ -291,10 +293,10 @@ if __name__ == "__main__":
     imgGray = cv2.cvtColor(andou,cv2.COLOR_BGR2GRAY)
 
     #リサイズ
-    img = cv2.resize(imgGray,(64,64))
+    img = cv2.resize(imgGray,(128,128))
 
     # リシェイプ
-    img = np.reshape(img,(1,64,64))
+    img = np.reshape(img,(1,128,128))
 
     # Torch化
     img = torch.from_numpy(img.astype(np.float32)).clone()
@@ -315,9 +317,10 @@ if __name__ == "__main__":
     print(p.argmax())
 
     print(type(p))
+    """
 
     # 結果の出力と描画
-    print(history)
+    #print(history)
     df = pd.DataFrame(history)
     df.to_excel('nn.xlsx')
     plt.figure()
